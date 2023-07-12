@@ -23,12 +23,12 @@ public class StudentController {
 
     @PostMapping
     public StudentDtoOut createStudent(@RequestBody StudentDtoIn studentDtoIn) {
-        return studentService.create(studentDtoIn);
+        return studentService.createStudent(studentDtoIn);
     }
 
     @GetMapping("{id}")
     public StudentDtoOut findStudent(@PathVariable Long id) {
-        return studentService.find(id);
+        return studentService.findStudent(id);
     }
 
     @GetMapping
@@ -36,11 +36,11 @@ public class StudentController {
                                                       @RequestParam(required = false) Integer to,
                                                       @RequestParam(required = false) Integer age) {
         if (from != null && to != null) {
-            return studentService.findByAgeBetween(to, from);
+            return studentService.findStudentsByAgeBetween(to, from);
         } else if (age != null) {
             return studentService.getStudentsByAge(age);
         }
-        return studentService.getAll();
+        return studentService.getAllStudents();
     }
 
     @GetMapping("faculty/{id}")
@@ -65,12 +65,12 @@ public class StudentController {
 
     @PutMapping
     public StudentDtoOut updateStudent(@RequestBody StudentDtoIn studentDtoIn) {
-        return studentService.update(studentDtoIn);
+        return studentService.updateStudent(studentDtoIn);
     }
 
     @DeleteMapping("{id}")
     public StudentDtoOut deleteStudent(@PathVariable Long id) {
-        return studentService.delete(id);
+        return studentService.deleteStudent(id);
     }
 
     @PatchMapping(value = "{id}/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

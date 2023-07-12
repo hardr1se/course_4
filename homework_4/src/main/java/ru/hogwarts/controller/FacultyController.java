@@ -19,19 +19,19 @@ public class FacultyController {
 
     @PostMapping
     public FacultyDtoOut createFaculty(@RequestBody FacultyDtoIn facultyDtoIn) {
-        return facultyService.create(facultyDtoIn);
+        return facultyService.createFaculty(facultyDtoIn);
     }
 
     @GetMapping("{id}")
     public FacultyDtoOut findFaculty(@PathVariable Long id) {
-        return facultyService.find(id);
+        return facultyService.findFaculty(id);
     }
 
     @GetMapping
     public Collection<FacultyDtoOut> getFacultiesByColour(@RequestParam(required = false) String colourOrName) {
         return colourOrName != null ?
                 facultyService.findFacultiesByColourOrName(colourOrName) :
-                facultyService.getAll();
+                facultyService.getAllFaculties();
     }
 
     @GetMapping("/students")
@@ -41,11 +41,11 @@ public class FacultyController {
 
     @PutMapping
     public FacultyDtoOut updateFaculty(@RequestBody FacultyDtoIn facultyDtoIn) {
-        return facultyService.update(facultyDtoIn);
+        return facultyService.updateFaculty(facultyDtoIn);
     }
 
     @DeleteMapping("{id}")
     public FacultyDtoOut deleteFaculty(@PathVariable Long id) {
-        return facultyService.delete(id);
+        return facultyService.deleteFaculty(id);
     }
 }
