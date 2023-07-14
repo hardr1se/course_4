@@ -1,6 +1,8 @@
 package ru.hogwarts.service;
 
 import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import ru.hogwarts.dto.in.FacultyDtoIn;
 import ru.hogwarts.dto.out.FacultyDtoOut;
@@ -16,6 +18,8 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static ru.hogwarts.utils.MethodLoading.getMethodName;
+
 @Service
 @AllArgsConstructor
 public class FacultyService {
@@ -23,24 +27,32 @@ public class FacultyService {
     private final FacultyMapper facultyMapper;
     private final StudentRepository studentRepository;
     private final StudentMapper studentMapper;
+    private final Logger log = LoggerFactory.getLogger(FacultyService.class);
 
-    public FacultyDtoOut create(FacultyDtoIn facultyDtoIn) {
+    public FacultyDtoOut createFaculty(FacultyDtoIn facultyDtoIn) {
+        log.debug("Method '" + getMethodName() + "' is loading");
         return facultyMapper.toDto(facultyRepository.save(facultyMapper.toEntity(facultyDtoIn)));
     }
 
-    public FacultyDtoOut find(long id) {
+    public FacultyDtoOut findFaculty(long id) {
+        log.debug("Method '" + getMethodName() + "' is loading");
         return Optional.ofNullable(facultyRepository.findById(id))
                 .map(facultyMapper::toDto)
-                .orElseThrow(() -> new FacultyNotFoundException(id));
+                .orElseThrow(() -> {
+                    log.error("Faculty with id = " + id + " wasn't found");
+                    return new FacultyNotFoundException(id);
+                });
     }
 
-    public Collection<FacultyDtoOut> getAll() {
+    public Collection<FacultyDtoOut> getAllFaculties() {
+        log.debug("Method '" + getMethodName() + "' is loading");
         return facultyRepository.findAll().stream()
                 .map(facultyMapper::toDto)
                 .collect(Collectors.toList());
     }
 
     public Collection<FacultyDtoOut> findFacultiesByColourOrName(String colourOrName) {
+        log.debug("Method '" + getMethodName() + "' is loading");
         return facultyRepository
                 .findByColourContainingIgnoreCaseOrNameContainingIgnoreCase(colourOrName, colourOrName)
                 .stream()
@@ -49,24 +61,33 @@ public class FacultyService {
     }
 
     public Collection<StudentDtoOut> findStudentsOfFaculty(Long facultyId) {
+        log.debug("Method '" + getMethodName() + "' is loading");
         return studentRepository.findByFaculty_Id(facultyId).stream()
                 .map(studentMapper::toDto)
                 .collect(Collectors.toList());
     }
 
-    public FacultyDtoOut update(FacultyDtoIn faculty) {
+    public FacultyDtoOut updateFaculty(FacultyDtoIn faculty) {
+        log.debug("Method '" + getMethodName() + "' is loading");
         return facultyRepository.findById(faculty.getId())
                 .map(old -> {
                     old.setName(faculty.getName());
                     old.setColour(faculty.getColour());
                     return facultyMapper.toDto(facultyRepository.save(old));
                 })
-                .orElseThrow(() -> new FacultyNotFoundException(faculty.getId()));
+                .orElseThrow(() -> {
+                    log.error("Faculty with id = " + faculty.getId() + " wasn't found");
+                    return new FacultyNotFoundException(faculty.getId());
+                });
     }
 
-    public FacultyDtoOut delete(long id) {
+    public FacultyDtoOut deleteFaculty(long id) {
+        log.debug("Method '" + getMethodName() + "' is loading");
         Faculty faculty = Optional.ofNullable(facultyRepository.findById(id))
-                .orElseThrow(() -> new FacultyNotFoundException(id));
+                .orElseThrow(() -> {
+                    log.error("Faculty with id = " + id + " wasn't found");
+                    return new FacultyNotFoundException(id);
+                });
         facultyRepository.delete(faculty);
         return facultyMapper.toDto(faculty);
     }

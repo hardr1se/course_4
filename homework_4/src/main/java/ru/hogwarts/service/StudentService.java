@@ -1,8 +1,9 @@
 package ru.hogwarts.service;
 
 import lombok.AllArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.multipart.MultipartFile;
 import ru.hogwarts.dto.out.FacultyDtoOut;
 import ru.hogwarts.dto.in.StudentDtoIn;
@@ -18,6 +19,8 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static ru.hogwarts.utils.MethodLoading.getMethodName;
+
 @Service
 @AllArgsConstructor
 public class StudentService {
@@ -25,31 +28,43 @@ public class StudentService {
     private final StudentMapper studentMapper;
     private final FacultyRepository facultyRepository;
     private final AvatarService avatarService;
+    private final Logger log = LoggerFactory.getLogger(StudentService.class);
 
-    public StudentDtoOut create(StudentDtoIn studentDtoIn) {
+    public StudentDtoOut createStudent(StudentDtoIn studentDtoIn) {
+        log.debug("Method '" + getMethodName() + "' is loading");
         return studentMapper.toDto(studentRepository.save(studentMapper.toEntity(studentDtoIn)));
     }
 
-    public StudentDtoOut find(long id) {
+    public StudentDtoOut findStudent(long id) {
+        log.debug("Method '" + getMethodName() + "' is loading");
         return Optional.ofNullable(studentRepository.findById(id))
                 .map(studentMapper::toDto)
-                .orElseThrow(() -> new StudentNotFoundException(id));
+                .orElseThrow(() -> {
+                    log.error("Student with id = " + id + " wasn't found");
+                    return new StudentNotFoundException(id);
+                });
     }
 
-    public Collection<StudentDtoOut> getAll() {
+    public Collection<StudentDtoOut> getAllStudents() {
+        log.debug("Method '" + getMethodName() + "' is loading");
         return studentRepository.findAll().stream()
                 .map(studentMapper::toDto)
                 .collect(Collectors.toList());
     }
 
     public FacultyDtoOut findFacultyOfStudent(long studentId) {
+        log.debug("Method '" + getMethodName() + "' is loading");
         return Optional.ofNullable(studentRepository.findById(studentId))
                 .map(studentMapper::toDto)
-                .orElseThrow(() -> new StudentNotFoundException(studentId))
+                .orElseThrow(() -> {
+                    log.error("Student with id = " + studentId + " wasn't found");
+                    return new StudentNotFoundException(studentId);
+                })
                 .getFaculty();
     }
 
-    public StudentDtoOut update(StudentDtoIn student) {
+    public StudentDtoOut updateStudent(StudentDtoIn student) {
+        log.debug("Method '" + getMethodName() + "' is loading");
         return studentRepository.findById(student.getId())
                 .map(old -> {
                     old.setName(student.getName());
@@ -57,31 +72,44 @@ public class StudentService {
                     old.setFaculty(facultyRepository.findById(student.getFacultyId()));
                     return studentMapper.toDto(studentRepository.save(old));
                 })
-                .orElseThrow(() -> new StudentNotFoundException(student.getId()));
+                .orElseThrow(() -> {
+                    log.error("Student with id = " + student.getId() + " wasn't found");
+                    return new StudentNotFoundException(student.getId());
+                });
     }
 
-    public StudentDtoOut delete(long id) {
+    public StudentDtoOut deleteStudent(long id) {
+        log.debug("Method '" + getMethodName() + "' is loading");
         Student student = Optional.ofNullable(studentRepository.findById(id))
-                .orElseThrow(() -> new StudentNotFoundException(id));
+                .orElseThrow(() -> {
+                    log.error("Student with id = " + id + " wasn't found");
+                    return new StudentNotFoundException(id);
+                });
         studentRepository.delete(student);
         return studentMapper.toDto(student);
     }
 
     public Collection<StudentDtoOut> getStudentsByAge(int age) {
+        log.debug("Method '" + getMethodName() + "' is loading");
         return studentRepository.findByAge(age).stream()
                 .map(studentMapper::toDto)
                 .collect(Collectors.toList());
     }
 
-    public Collection<StudentDtoOut> findByAgeBetween(int from, int to) {
+    public Collection<StudentDtoOut> findStudentsByAgeBetween(int from, int to) {
+        log.debug("Method '" + getMethodName() + "' is loading");
         return studentRepository.findByAgeBetween(from, to).stream()
                 .map(studentMapper::toDto)
                 .collect(Collectors.toList());
     }
 
     public StudentDtoOut uploadAvatar(Long id, MultipartFile file) {
+        log.debug("Method '" + getMethodName() + "' is loading");
         Student student = studentRepository.findById(id)
-                .orElseThrow(() -> new StudentNotFoundException(id));
+                .orElseThrow(() -> {
+                    log.error("Student with id = " + id + " wasn't found");
+                    return new StudentNotFoundException(id);
+                });
         Avatar avatar = avatarService.uploadAvatar(id, file);
         StudentDtoOut studentDtoOut = studentMapper.toDto(student);
         studentDtoOut.setAvatarUri("http://localhost:8080/avatars/" + avatar.getId() + "/fs");
@@ -89,14 +117,17 @@ public class StudentService {
     }
 
     public Integer findTotalStudents() {
+        log.debug("Method '" + getMethodName() + "' is loading");
         return studentRepository.findTotalStudents();
     }
 
     public Integer findAverageAgeOfStudents() {
+        log.debug("Method '" + getMethodName() + "' is loading");
         return studentRepository.findAverageAgeOfStudents();
     }
 
     public Collection<StudentDtoOut> findLastFiveStudents() {
+        log.debug("Method '" + getMethodName() + "' is loading");
         return studentRepository.findLastFiveStudents().stream()
                 .map(studentMapper::toDto)
                 .collect(Collectors.toList());
