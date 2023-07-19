@@ -15,6 +15,7 @@ import ru.hogwarts.repository.FacultyRepository;
 import ru.hogwarts.repository.StudentRepository;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -90,5 +91,12 @@ public class FacultyService {
                 });
         facultyRepository.delete(faculty);
         return facultyMapper.toDto(faculty);
+    }
+
+    public String getLongestNameOfFaculty() {
+        return facultyRepository.findAll().stream()
+                .map(Faculty::getName)
+                .max(Comparator.comparing(String::length))
+                .orElse("There are no faculties in the DB");
     }
 }
