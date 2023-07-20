@@ -73,6 +73,18 @@ public class StudentController {
         return studentService.getAverageAgeOfStudents();
     }
 
+    @GetMapping("students_by_threads")
+    public String getStudentsByThreads() {
+        studentService.getStudentsByThreads();
+        return "Students are printed";
+    }
+
+    @GetMapping("students_by_threads_synchronized")
+    public String getStudentsByThreadsSynchronized() {
+        studentService.getStudentsByThreadsSynchronized();
+        return "Students are printed synchronized";
+    }
+
     @PutMapping
     public StudentDtoOut updateStudent(@RequestBody StudentDtoIn studentDtoIn) {
         return studentService.updateStudent(studentDtoIn);
