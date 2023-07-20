@@ -63,6 +63,16 @@ public class StudentController {
         return studentService.findLastFiveStudents();
     }
 
+    @GetMapping("sorted_by_name")
+    public Collection<String> getStudentsSortedByName(@RequestParam(value = "letter", defaultValue = "А") String letter) {
+        return studentService.getStudentsSortedByName(letter);
+    }
+
+    @GetMapping("average_age")
+    public Double getAverageAgeOfStudents() {
+        return studentService.getAverageAgeOfStudents();
+    }
+
     @PutMapping
     public StudentDtoOut updateStudent(@RequestBody StudentDtoIn studentDtoIn) {
         return studentService.updateStudent(studentDtoIn);
