@@ -17,8 +17,10 @@ import ru.hogwarts.repository.StudentRepository;
 
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static ru.hogwarts.utils.MethodLoading.getMethodName;
 
@@ -147,5 +149,26 @@ public class StudentService {
                 .mapToInt(Student::getAge)
                 .average()
                 .orElse(0);
+    }
+
+    public void getStudentsByThreads() {
+        List<String> students = studentRepository.findAll().stream()
+                .map(Student::getName)
+                .toList();
+        int size = students.size();
+
+        if (size > 2) students.subList(0, 2).forEach(System.out::println);
+
+        new Thread(() -> {
+            if (size > 4) students.subList(2, 4).forEach(System.out::println);
+        }).start();
+
+        new Thread(() -> {
+            if (size > 6) students.subList(4, 6).forEach(System.out::println);
+        }).start();
+    }
+
+    public synchronized void getStudentsByThreadsSynchronized() {
+        getStudentsByThreads();
     }
 }
