@@ -3,7 +3,7 @@ This bot is very useful for everyday life that works like a reminder or alarm cl
 
 ## Instruction of exploiting
 - ```/start``` to make bot working. It's initial command to welcome the user.
-- ```/add``` to get instruction of adding a task. This message contain the pattern of correct task formation.
+- ```/add``` to get instruction of adding a task. This message contains the pattern of correct task formation.
 
 ## Benefits
 - can help to organize the activities
