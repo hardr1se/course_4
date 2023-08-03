@@ -5,6 +5,7 @@ import com.pengrad.telegrambot.UpdatesListener;
 import com.pengrad.telegrambot.model.Update;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import pro.sky.telegrambot.enities.NotificationTask;
 import pro.sky.telegrambot.mapper.NotificationTaskMapper;
@@ -82,7 +83,7 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
     }
 
     private void processStartCommand(Long chatId) {
-        bot.execute(messageUtils.sendMessage(chatId, "Hi there, It's my course work"));
+        bot.execute(messageUtils.sendMessage(chatId, "Hi there, It's my course work. To get the pattern of correct task formation print command /add."));
     }
 
     private void processAddCommand(Long chatId) {
@@ -129,5 +130,10 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Scheduled(fixedDelay = 120_000)
+    private void reminder() {
+        logger.info("Time to check the log of program at " + LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
     }
 }
