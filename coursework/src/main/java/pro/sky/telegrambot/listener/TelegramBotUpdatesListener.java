@@ -16,7 +16,6 @@ import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,6 +23,7 @@ import java.util.regex.Pattern;
 public class TelegramBotUpdatesListener implements UpdatesListener {
 
     private final Logger logger = LoggerFactory.getLogger(TelegramBotUpdatesListener.class);
+    private static long CHAT_ID = 0;
 
     private final TelegramBot telegramBot;
     private final NotificationTaskRepository taskRepository;
@@ -55,85 +55,61 @@ public class TelegramBotUpdatesListener implements UpdatesListener {
         updates.forEach(update -> {
             logger.info("Processing update: {}", update);
 
+            CHAT_ID = update.message().chat().id();
             var message = update.message().text();
             var matcher = pattern.matcher(message);
-            var chatId = update.message().chat().id();
-            var pastChatId = 0L;
 
-            if (pastChatId != update.message().chat().id()) {
-                pastChatId = chatId;
-                new Thread(() -> processNotificationDaemon(chatId)).start();
-            }
-
-            distributiveMessagesByCommands(chatId, matcher, message);
+            distributiveMessagesByCommands(CHAT_ID, matcher, message);
         });
         return UpdatesListener.CONFIRMED_UPDATES_ALL;
     }
 
     private void distributiveMessagesByCommands(Long chatId, Matcher matcher, String message) {
         if (message.equals("/start")) {
-            processStartCommand(chatId);
+            processStartCommand();
         } else if (message.equals("/add")) {
-            processAddCommand(chatId);
+            processAddCommand();
         } else if (matcher.matches()) {
-            processNotificationTask(chatId, message);
+            processNotificationTask(message);
         } else {
-            unsupportedTypeOfText(chatId);
+            unsupportedTypeOfText();
         }
     }
 
-    private void processStartCommand(Long chatId) {
-        bot.execute(messageUtils.sendMessage(chatId, "Hi there, It's my course work. To get the pattern of correct task formation print command /add."));
+    private void processStartCommand() {
+        bot.execute(messageUtils.sendMessage(CHAT_ID, "Hi there, It's my course work. To get the pattern of correct task formation print command /add."));
     }
 
-    private void processAddCommand(Long chatId) {
-        var sendAddMessage = messageUtils.sendMessage(chatId, "Write ur task according to a certain example: 01.01.2022 20:00 Помыть посуду");
+    private void processAddCommand() {
+        var sendAddMessage = messageUtils.sendMessage(CHAT_ID, "Write ur task according to a certain example: 01.01.2022 20:00 Помыть посуду");
         bot.execute(sendAddMessage);
     }
 
-    private void unsupportedTypeOfText(Long chatId) {
+    private void unsupportedTypeOfText() {
         logger.error("Unsupported command");
-        bot.execute(messageUtils.sendMessage(chatId, "Unsupported command"));
+        bot.execute(messageUtils.sendMessage(CHAT_ID, "Unsupported command"));
     }
 
-    private void processNotificationTask(Long chatId, String message) {
-        var taskDtoIn = messageUtils.taskProcessing(chatId, message);
+    private void processNotificationTask(String message) {
+        var taskDtoIn = messageUtils.taskProcessing(CHAT_ID, message);
         if (taskDtoIn == null) {
             logger.error("Unsupported argument");
             return;
         }
-        bot.execute(messageUtils.sendMessage(chatId, String.format(
+        bot.execute(messageUtils.sendMessage(CHAT_ID, String.format(
                 "Task: '%s' - is successfully added",
                 taskMapper.toDto(taskRepository.save(taskMapper.toEntity(taskDtoIn))))));
     }
 
-    public synchronized void processNotificationDaemon(Long chatId) {
-        int counter = 0;
-        while (true) {
+    @Scheduled(fixedDelay = 10_000)
+    private synchronized void reminder() {
+        if (CHAT_ID != 0) {
             NotificationTask notificationTask = taskRepository.getByDateOfTask(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
             if (notificationTask != null) {
-                if (counter == 3) {
-                    taskRepository.delete(notificationTask);
-                    counter = 0;
-                }
-                bot.execute(messageUtils.sendMessage(chatId, taskMapper.toDto(notificationTask).toString()));
-                counter++;
+                taskRepository.delete(notificationTask);
+                bot.execute(messageUtils.sendMessage(CHAT_ID, taskMapper.toDto(notificationTask).toString()));
+                logger.info("Task '" + notificationTask + "' is pushed and deleted from DB");
             }
-            pause(10);
         }
-    }
-
-
-    private void pause(int time) {
-        try {
-            TimeUnit.SECONDS.sleep(time);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @Scheduled(fixedDelay = 120_000)
-    private void reminder() {
-        logger.info("Time to check the log of program at " + LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
     }
 }
